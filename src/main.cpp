@@ -19,9 +19,9 @@ void init()
     }
 }
 
-vector<string> ReadInput(string fliepath)
+deque<string> ReadInput(string fliepath)
 {
-    vector<string> input;
+    deque<string> input;
     ifstream file(fliepath);
     if (file.is_open())
     {
@@ -47,12 +47,77 @@ string GetInstruction(string line)
     return "";
 }
 
-int main() {
-    vector<string> input = ReadInput("../inputs/test3.txt");
-    for (string line : input)
+enum stage
+{
+    IF,
+    ID,
+    EX,
+    MEM,
+    WB
+};
+
+string EnumtoString(enum stage s)
+{
+    switch (s)
     {
-        cout << line << endl;
-        cout << GetInstruction(line) << endl <<endl;
+    case IF:
+        return "IF";
+    case ID:
+        return "ID";
+    case EX:
+        return "EX";
+    case MEM:
+        return "MEM";
+    case WB:
+        return "WB";
+    default:
+        return "ERROR";
     }
+}
+
+int main() {
+    deque<string> input = ReadInput("../inputs/test3.txt");
+    init();
+    int cycle = 0;
+    deque<pair<string,stage>> instructions;
+    instructions.push_back({input.front(),IF});
+    input.pop_front();
+    while(!instructions.empty())
+    {
+        cout<<"Cycle "<<(++cycle)<<endl;
+        for(int i=0;i<instructions.size();i++)
+        {
+            string instruction = instructions[i].first;
+            stage current_stage = instructions[i].second;
+            string current_instruction = GetInstruction(instruction);
+            cout<<current_instruction<<":"<<EnumtoString(current_stage)<<endl;
+            if(current_stage==IF)
+            {
+                instructions[i].second = ID;
+            }
+            else if(current_stage==ID)
+            {
+                instructions[i].second = EX;
+            }
+            else if(current_stage==EX)
+            {
+                instructions[i].second = MEM;
+            }
+            else if(current_stage==MEM)
+            {
+                instructions[i].second = WB;
+            }
+            else if(current_stage==WB)
+            {
+                instructions.pop_front();
+            }
+        }
+        if(!input.empty())
+        {
+            instructions.push_back({input.front(),IF});
+            input.pop_front();
+        }
+    }
+
     return 0;
 }
