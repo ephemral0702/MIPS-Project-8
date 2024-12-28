@@ -105,6 +105,7 @@ int main() {
         ofstream output("../outputs/"+filenames.front());
         filenames.pop();
         init();
+        
         deque<string> input = Inputs.front();
         deque<pair<string,stage>> instructions;
 
