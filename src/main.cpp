@@ -2,7 +2,6 @@
 #include<fstream>
 #include<vector>
 #include<deque>
-#include<utility>
 #include<queue>
 #include<string>
 #include<windows.h>
@@ -32,7 +31,8 @@ void init()
     cycle = 0;
 }
 
-void ReadFile(const string &folder_path){
+void ReadFile(const string &folder_path)
+{
     WIN32_FIND_DATA ToFind; //WIN32_FIND_DATA 是一個typedef 用來存放檔案或資料夾的資料 例如檔案名稱、檔案大小、建立時間等等
     HANDLE hFind = FindFirstFile(folder_path.c_str(), &ToFind); //打開資料夾,HANDLE 是一個指標 用來指向一個資料夾或檔案
 
@@ -63,24 +63,11 @@ void ReadFile(const string &folder_path){
     FindClose(hFind);
 }
 
-string GetInstruction(string line)
-{
-    for(int i=0;i<line.length();i++)
-    {
-        if(line[i]==' ')
-        {
-            return line.substr(0,i);
-        }
-    }
-    return "";
-}
-
 enum stage{IF,ID,EX,MEM,WB};
 
 string EnumtoString(enum stage s)
 {
-    switch (s)
-    {
+    switch (s){
     case IF:
         return "IF";
     case ID:
@@ -96,7 +83,102 @@ string EnumtoString(enum stage s)
     }
 }
 
-int main() {
+struct Instruction
+{
+    string instruction;
+    int rd;
+    int rs; //lw,sw用來存位移
+    int rt; //lw,sw用來存()裡的暫存器、beq用來存位移
+    stage current_stage;
+};
+
+Instruction process_instruction(string input)
+{
+    Instruction inst;
+    for(int i=0;i<input.length();i++)
+    {
+        if(input[i]==' ')
+        {
+            inst.instruction = input.substr(0,i);
+            input = input.substr(i+1);
+            break;
+        }
+    }
+    if(inst.instruction == "lw" || inst.instruction == "sw")
+    {
+        for(int i=0;i<input.length();i++){
+            if(input[i]=='$')
+            {
+                inst.rd = input[i+1] - '0';
+                input = input.substr(i+3);
+                break;
+            }
+        }
+        for(int i = 0,j = 0;i<input.length();i++){
+            if(input[i] == '(')
+            {
+                inst.rs = stoi(input.substr(j,i-j));
+            }
+            if(input[i] == '$')
+            {
+                inst.rt = input[i+1] - '0';
+                break;
+            }
+        }
+        
+    }
+    else if(inst.instruction == "add" || inst.instruction == "sub")
+    {
+        for(int i=0;i<input.length();i++){
+            if(input[i]=='$')
+            {
+                inst.rd = input[i+1] - '0';
+                input = input.substr(i+3);
+                break;
+            }
+        }
+        for(int i=0;i<input.length();i++){
+            if(input[i]=='$')
+            {
+                inst.rs = input[i+1] - '0';
+                input = input.substr(i+3);
+                break;
+            }
+        }
+        for(int i=0;i<input.length();i++){
+            if(input[i]=='$')
+            {
+                inst.rt = input[i+1] - '0';
+                break;
+            }
+        }
+    }
+    else
+    {
+        for(int i=0;i<input.length();i++){
+            if(input[i]=='$')
+            {
+                inst.rd = input[i+1] - '0';
+                input = input.substr(i+3);
+                break;
+            }
+        }
+        for(int i=0;i<input.length();i++){
+            if(input[i]=='$')
+            {
+                inst.rs = input[i+1] - '0';
+                input = input.substr(i+3);
+                break;
+            }
+        }
+        inst.rt = stoi(input);
+    }
+    inst.current_stage = IF;
+
+    return inst;
+}
+
+int main(){
 
     init();
     ReadFile(folder_path);
@@ -107,37 +189,38 @@ int main() {
         init();
         
         deque<string> input = Inputs.front();
-        deque<pair<string,stage>> instructions;
+        deque<Instruction> instructions;
 
         Inputs.pop();
 
-        instructions.push_back({input.front(),IF});
+        instructions.push_back(process_instruction(input.front()));
         input.pop_front();
 
         while(!instructions.empty()){
             //cout<<"Cycle "<<(++cycle)<<endl;
-            output<<"Cycle "<<cycle<<endl;
+            output<<"Cycle "<<++cycle<<endl;
             for(int i=0;i<instructions.size();i++){
-                string instruction = instructions[i].first;
-                stage current_stage = instructions[i].second;
-                string current_instruction = GetInstruction(instruction);
-                //cout<<current_instruction<<":"<<EnumtoString(current_stage)<<endl;
-                output<<current_instruction<<":"<<EnumtoString(current_stage)<<endl;
+                string instruction = instructions[i].instruction;
+                stage current_stage = instructions[i].current_stage;
+
+                //cout<<instructions[i].instruction<<":"<<EnumtoString(current_stage)<<endl;
+                output<<instructions[i].instruction<<":"<<EnumtoString(current_stage)<<endl;
+
                 if(current_stage==IF)
                 {
-                    instructions[i].second = ID;
+                    instructions[i].current_stage = ID;
                 }
                 else if(current_stage==ID)
                 {
-                    instructions[i].second = EX;
+                    instructions[i].current_stage = EX;
                 }
                 else if(current_stage==EX)
                 {
-                    instructions[i].second = MEM;
+                    instructions[i].current_stage = MEM;
                 }
                 else if(current_stage==MEM)
                 {
-                    instructions[i].second = WB;
+                    instructions[i].current_stage = WB;
                 }
                 else if(current_stage==WB)
                 {
@@ -146,7 +229,7 @@ int main() {
             }
             if(!input.empty())
             {
-                instructions.push_back({input.front(),IF});
+                instructions.push_back(process_instruction(input.front()));
                 input.pop_front();
             }
         }
