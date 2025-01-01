@@ -1,35 +1,35 @@
-Cycle 0
+Cycle 1
 sub:IF
-Cycle 0
+Cycle 2
 sub:ID
 beq:IF
-Cycle 0
-sub:EX
+Cycle 3
+sub:EX RegDst=1 ALUSrc=0 Branch=0 MemRead=0 MemWrite=0 RegWrite=1 MemtoReg=0
 beq:ID
 add:IF
-Cycle 0
-sub:MEM
-beq:EX
+Cycle 4
+sub:MEM Branch=0 MemRead=0 MemWrite=0 RegWrite=1 MemtoReg=0
+beq:EX RegDst=X ALUSrc=0 Branch=1 MemRead=0 MemWrite=0 RegWrite=0 MemtoReg=X
 add:ID
 lw:IF
-Cycle 0
-sub:WB
-add:EX
+Cycle 5
+sub:WB RegWrite=1 MemtoReg=0
+add:EX RegDst=1 ALUSrc=0 Branch=0 MemRead=0 MemWrite=0 RegWrite=1 MemtoReg=0
 lw:ID
 add:IF
-Cycle 0
-beq:MEM
-add:MEM
-lw:EX
+Cycle 6
+beq:MEM Branch=1 MemRead=0 MemWrite=0 RegWrite=0 MemtoReg=X
+add:MEM Branch=0 MemRead=0 MemWrite=0 RegWrite=1 MemtoReg=0
+lw:EX RegDst=0 ALUSrc=1 Branch=0 MemRead=1 MemWrite=0 RegWrite=1 MemtoReg=1
 add:ID
-Cycle 0
-beq:WB
-lw:MEM
-add:EX
-Cycle 0
-add:WB
-add:MEM
-Cycle 0
-lw:WB
-Cycle 0
-add:WB
+Cycle 7
+beq:WB RegWrite=0 MemtoReg=X
+lw:MEM Branch=0 MemRead=1 MemWrite=0 RegWrite=1 MemtoReg=1
+add:EX RegDst=1 ALUSrc=0 Branch=0 MemRead=0 MemWrite=0 RegWrite=1 MemtoReg=0
+Cycle 8
+add:WB RegWrite=1 MemtoReg=0
+add:MEM Branch=0 MemRead=0 MemWrite=0 RegWrite=1 MemtoReg=0
+Cycle 9
+lw:WB RegWrite=1 MemtoReg=1
+Cycle 10
+add:WB RegWrite=1 MemtoReg=0
