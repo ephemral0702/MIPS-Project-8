@@ -1,0 +1,29 @@
+Cycle 0
+lw:IF
+Cycle 0
+lw:ID
+beq:IF
+Cycle 0
+lw:EX
+beq:ID
+sub:IF
+Cycle 0
+lw:MEM
+beq:EX
+sub:ID
+sw:IF
+Cycle 0
+lw:WB
+sub:EX
+sw:ID
+Cycle 0
+beq:MEM
+sub:MEM
+sw:EX
+Cycle 0
+beq:WB
+sw:MEM
+Cycle 0
+sub:WB
+Cycle 0
+sw:WB
