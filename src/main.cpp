@@ -202,6 +202,7 @@ int main(){
             //cout<<"Cycle "<<(++cycle)<<endl;
             output<<"Cycle "<<++cycle<<endl;
             PC++;
+            int stall = 0;
             for(int i=0;i<instructions.size();i++){
                 string instruction = instructions[i].instruction;
                 stage current_stage = instructions[i].current_stage;
@@ -216,6 +217,19 @@ int main(){
                 }
                 else if(current_stage==ID)
                 {
+                    if (instructions[i].instruction=="lw" && i+1 < instructions.size()){
+                        if ((instructions[i].rt == instructions[i+1].rs) || (instructions[i].rt == instructions[i+1].rt)){
+                            if (instructions[i+1].instruction == "beq"){
+                                stall = 2;
+                            }
+                            else{  // add, sub, ...
+                                stall = 1;
+                            }
+                            instructions[i].current_stage = EX;
+                            break;
+                        }
+                    }
+
                     output<<endl;
                     instructions[i].current_stage = EX;
                 }
@@ -256,6 +270,7 @@ int main(){
                     }
                     else if(instructions[i].instruction=="lw")
                     {
+                        Register[instructions[i].rt] = Memory[instructions[i].constant / 4 + instructions[i].rs];
                         output<<" Branch=0 MemRead=1 MemWrite=0 RegWrite=1 MemtoReg=1";
                     }
                     else if(instructions[i].instruction=="sw")
@@ -298,6 +313,9 @@ int main(){
             if(PC<input.size())
             {
                 instructions.push_back(process_instruction(input[PC]));
+            }
+            if (stall != 0){
+                PC -= stall;
             }
         }
         output.close();
