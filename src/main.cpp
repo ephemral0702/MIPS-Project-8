@@ -200,13 +200,13 @@ int main(){
         Inputs.pop();
 
         instructions.push_back(process_instruction(input[PC]));
-
+        int stall = 0;
+        bool taken = false;
         while(!instructions.empty()){
             cout<<PC<<endl;
             //cout<<"Cycle "<<(++cycle)<<endl;
             output<<"Cycle "<<++cycle<<endl;
             PC++;
-            int stall = 0;
             for(int i=0;i<instructions.size();i++){
                 string instruction = instructions[i].instruction;
                 stage current_stage = instructions[i].current_stage;
@@ -217,37 +217,24 @@ int main(){
                 if(current_stage==IF)
                 {
                     output<<endl;
+                    if(taken){
+                        instructions.pop_back();
+                        taken = false;
+                    }
+                    if(stall) continue;
                     instructions[i].current_stage = ID;
                 }
                 else if(current_stage==ID)
                 {
-                    if(instruction == "beq"){
-                        if(i > 0 && (instructions[i-1].instruction == "add" || instructions[i-1].instruction == "sub") && instructions[i - 1].rd == (instructions[i].rs || instructions[i].rt)){
-                            instructions[i].current_stage = EX;
-                            break;
-                        }
-                        if(Register[instructions[i].rs] == Register[instructions[i].rt]){
-                            //taken
-                            if(PC != instructions.size() - 1){
-                                instructions.pop_back();
-                            }
-                            PC = PC + instructions[i].constant - 1 - 1; //PC++ && predict not taken
-                        }
-                    }
-                    if (instructions[i].instruction=="lw" && i+1 < instructions.size()){
-                        if ((instructions[i].rt == instructions[i+1].rs) || (instructions[i].rt == instructions[i+1].rt)){
-                            if (instructions[i+1].instruction == "beq"){
-                                stall = 2;
-                            }
-                            else{  // add, sub, ...
-                                stall = 1;
-                            }
-                            instructions[i].current_stage = EX;
-                            break;
-                        }
-                    }
-
                     output<<endl;
+                    if(stall) continue;
+                    if(instruction == "beq"){
+                        cout<<Register[instructions[i].rs]<<" "<<Register[instructions[i].rt]<<endl;
+                        if(Register[instructions[i].rs] == Register[instructions[i].rt]){
+                            taken = true;
+                            PC = PC + instructions[i].constant - 1; //PC++ && predict not taken
+                        }
+                    }
                     instructions[i].current_stage = EX;
                 }
                 else if(current_stage==EX)
@@ -272,6 +259,23 @@ int main(){
                     {
                         output<<" RegDst=X ALUSrc=0 Branch=1 MemRead=0 MemWrite=0 RegWrite=0 MemtoReg=X";
                     }
+                    if (instructions[i].instruction=="lw" && i+1 < instructions.size()){
+                        if ((instructions[i].rt == instructions[i+1].rs) || (instructions[i].rt == instructions[i+1].rt)){
+                            if (instructions[i+1].instruction == "beq"){
+                                stall = 2;
+                            }
+                            else{  // add, sub, ...
+                                stall = 1;
+                            }
+                        }
+                    }
+                    if ((instructions[i].instruction=="sub" || instructions[i].instruction=="add") && i+1 < instructions.size()){
+                        if(instructions[i+1].instruction == "beq" && ((instructions[i].rd == instructions[i + 1].rs )|| (instructions[i].rd == instructions[i + 1].rt))){
+                            stall = 1;
+                            cout<<"Hello world"<<endl;
+                        }
+                    }
+                    
                     output<<endl;
                     instructions[i].current_stage = MEM;
                 }
@@ -289,7 +293,6 @@ int main(){
                     }
                     else if(instructions[i].instruction=="lw")
                     {
-                        Register[instructions[i].rt] = Memory[instructions[i].constant / 4 + instructions[i].rs];
                         output<<" Branch=0 MemRead=1 MemWrite=0 RegWrite=1 MemtoReg=1";
                     }
                     else if(instructions[i].instruction=="sw")
@@ -315,6 +318,7 @@ int main(){
                     }
                     else if(instructions[i].instruction=="lw")
                     {
+                        Register[instructions[i].rt] = Memory[instructions[i].constant / 4 + instructions[i].rs];
                         output<<" RegWrite=1 MemtoReg=1";
                     }
                     else if(instructions[i].instruction=="sw")
@@ -335,25 +339,14 @@ int main(){
             {
                 instructions.pop_front();
             }
-            if(PC<input.size())
+            if(PC<input.size() && stall == 0)
             {
                 instructions.push_back(process_instruction(input[PC]));
             }
             if (stall != 0){
-                PC -= stall;
+                PC--;
+                stall--;
             }
-        }
-        output<<endl<<"## Final Result:"<<endl;
-        output<<"Total Cycles: "<<cycle<<endl<<endl;
-        output<<"Final Register Values:"<<endl;
-        for(int i=0;i<Register_num;i++)
-        {
-            output<<Register[i]<<" ";
-        }
-        output<<endl<<"Final Memory Values:"<<endl;
-        for(int i=0;i<Memory_size;i++)
-        {
-            output<<Memory[i]<<" ";
         }
         output<<endl<<"## Final Result:"<<endl;
         output<<"Total Cycles: "<<cycle<<endl<<endl;

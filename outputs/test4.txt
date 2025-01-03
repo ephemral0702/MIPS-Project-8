@@ -21,28 +21,48 @@ add:IF
 Cycle 6
 add:WB RegWrite=1 MemtoReg=0
 sub:MEM Branch=0 MemRead=0 MemWrite=0 RegWrite=1 MemtoReg=0
+beq:ID
+add:IF
+Cycle 7
+sub:WB RegWrite=1 MemtoReg=0
+beq:EX RegDst=X ALUSrc=0 Branch=1 MemRead=0 MemWrite=0 RegWrite=0 MemtoReg=X
+sub:IF
+Cycle 8
+beq:MEM Branch=1 MemRead=0 MemWrite=0 RegWrite=0 MemtoReg=X
+sub:ID
+beq:IF
+Cycle 9
+beq:WB RegWrite=0 MemtoReg=X
+sub:EX RegDst=1 ALUSrc=0 Branch=0 MemRead=0 MemWrite=0 RegWrite=1 MemtoReg=0
+beq:ID
+add:IF
+Cycle 10
+sub:MEM Branch=0 MemRead=0 MemWrite=0 RegWrite=1 MemtoReg=0
+beq:ID
+add:IF
+Cycle 11
+sub:WB RegWrite=1 MemtoReg=0
 beq:EX RegDst=X ALUSrc=0 Branch=1 MemRead=0 MemWrite=0 RegWrite=0 MemtoReg=X
 add:ID
 sw:IF
-Cycle 7
-sub:WB RegWrite=1 MemtoReg=0
+Cycle 12
 beq:MEM Branch=1 MemRead=0 MemWrite=0 RegWrite=0 MemtoReg=X
 add:EX RegDst=1 ALUSrc=0 Branch=0 MemRead=0 MemWrite=0 RegWrite=1 MemtoReg=0
 sw:ID
-Cycle 8
+Cycle 13
 beq:WB RegWrite=0 MemtoReg=X
 add:MEM Branch=0 MemRead=0 MemWrite=0 RegWrite=1 MemtoReg=0
 sw:EX RegDst=X ALUSrc=1 Branch=0 MemRead=0 MemWrite=1 RegWrite=0 MemtoReg=X
-Cycle 9
+Cycle 14
 add:WB RegWrite=1 MemtoReg=0
 sw:MEM Branch=0 MemRead=0 MemWrite=1 RegWrite=0 MemtoReg=X
-Cycle 10
+Cycle 15
 sw:WB RegWrite=0 MemtoReg=X
 
 ## Final Result:
-Total Cycles: 10
+Total Cycles: 15
 
 Final Register Values:
-0 2 1 1 4 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+0 2 1 1 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
 Final Memory Values:
-1 4 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+1 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
