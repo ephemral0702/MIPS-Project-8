@@ -186,6 +186,7 @@ int main(){
     init();
     ReadFile(folder_path);
     //int ca=0; //debug
+    cout<<"Start"<<endl;
     while(!Inputs.empty()){
 
         //cout<<"Case"<<(++ca)<<endl; //debug
@@ -203,18 +204,16 @@ int main(){
         int stall = 0;
         bool taken = false;
         while(!instructions.empty()){
-            cout<<PC<<endl;
+            //cout<<PC<<endl;
             //cout<<"Cycle "<<(++cycle)<<endl;
             output<<"Cycle "<<++cycle<<endl;
             PC++;
             for(int i=0;i<instructions.size();i++){
-                string instruction = instructions[i].instruction;
-                stage current_stage = instructions[i].current_stage;
 
-                //cout<<instructions[i].instruction<<":"<<EnumtoString(current_stage)<<endl;
-                output<<instructions[i].instruction<<":"<<EnumtoString(current_stage);
+                //cout<<instructions[i].instruction<<":"<<EnumtoString(instructions[i].current_stage)<<endl;
+                output<<instructions[i].instruction<<":"<<EnumtoString(instructions[i].current_stage);
 
-                if(current_stage==IF)
+                if(instructions[i].current_stage == IF)
                 {
                     output<<endl;
                     if(taken){
@@ -224,12 +223,12 @@ int main(){
                     if(stall) continue;
                     instructions[i].current_stage = ID;
                 }
-                else if(current_stage==ID)
+                else if(instructions[i].current_stage == ID)
                 {
                     output<<endl;
                     if(stall) continue;
-                    if(instruction == "beq"){
-                        cout<<Register[instructions[i].rs]<<" "<<Register[instructions[i].rt]<<endl;
+                    if(instructions[i].instruction == "beq"){
+                        //cout<<Register[instructions[i].rs]<<" "<<Register[instructions[i].rt]<<endl;
                         if(Register[instructions[i].rs] == Register[instructions[i].rt]){
                             taken = true;
                             PC = PC + instructions[i].constant - 1; //PC++ && predict not taken
@@ -237,7 +236,7 @@ int main(){
                     }
                     instructions[i].current_stage = EX;
                 }
-                else if(current_stage==EX)
+                else if(instructions[i].current_stage == EX)
                 {
                     if(instructions[i].instruction=="add")
                     {   
@@ -279,7 +278,7 @@ int main(){
                     output<<endl;
                     instructions[i].current_stage = MEM;
                 }
-                else if(current_stage==MEM)
+                else if(instructions[i].current_stage == MEM)
                 {
                     if(instructions[i].instruction=="add")
                     {   
@@ -306,7 +305,7 @@ int main(){
                     output<<endl;
                     instructions[i].current_stage = WB;
                 }
-                else if(current_stage==WB)
+                else if(instructions[i].current_stage == WB)
                 {
                     if(instructions[i].instruction=="add")
                     {
