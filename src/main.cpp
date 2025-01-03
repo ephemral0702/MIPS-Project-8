@@ -185,7 +185,10 @@ int main(){
 
     init();
     ReadFile(folder_path);
+    int ca=0;
     while(!Inputs.empty()){
+
+        cout<<"Case"<<(++ca)<<endl;
 
         ofstream output("../outputs/"+filenames.front());
         filenames.pop();
@@ -199,6 +202,7 @@ int main(){
         instructions.push_back(process_instruction(input[PC]));
 
         while(!instructions.empty()){
+            cout<<PC<<endl;
             //cout<<"Cycle "<<(++cycle)<<endl;
             output<<"Cycle "<<++cycle<<endl;
             PC++;
@@ -217,15 +221,16 @@ int main(){
                 else if(current_stage==ID)
                 {
                     if(instruction == "beq"){
-                        taken = false;
-                        if(Register[instructions[i].rs] == Register[instructions[i].rt]){
-                            taken = true;
+                        if(i > 0 && (instructions[i-1].instruction == "add" || instructions[i-1].instruction == "sub") && instructions[i - 1].rd == (instructions[i].rs || instructions[i].rt)){
+                            instructions[i].current_stage = EX;
+                            break;
                         }
-                        if(taken){
+                        if(Register[instructions[i].rs] == Register[instructions[i].rt]){
+                            //taken
                             if(PC != instructions.size() - 1){
-                                instrucions.pop_back();
+                                instructions.pop_back();
                             }
-                            PC = PC + instructions[i].constant - 1;
+                            PC = PC + instructions[i].constant - 1 - 1; //PC++ && predict not taken
                         }
                     }
                     output<<endl;
@@ -235,12 +240,10 @@ int main(){
                 {
                     if(instructions[i].instruction=="add")
                     {   
-                        Register[instructions[i].rd]=Register[instructions[i].rs]+Register[instructions[i].rt];
                         output<<" RegDst=1 ALUSrc=0 Branch=0 MemRead=0 MemWrite=0 RegWrite=1 MemtoReg=0";
                     }
                     else if(instructions[i].instruction=="sub")
                     {   
-                        Register[instructions[i].rd]=Register[instructions[i].rs]-Register[instructions[i].rt];
                         output<<" RegDst=1 ALUSrc=0 Branch=0 MemRead=0 MemWrite=0 RegWrite=1 MemtoReg=0";
                     }
                     else if(instructions[i].instruction=="lw")
@@ -262,10 +265,12 @@ int main(){
                 {
                     if(instructions[i].instruction=="add")
                     {   
+                        Register[instructions[i].rd]=Register[instructions[i].rs]+Register[instructions[i].rt];
                         output<<" Branch=0 MemRead=0 MemWrite=0 RegWrite=1 MemtoReg=0";
                     }
                     else if(instructions[i].instruction=="sub")
                     {   
+                        Register[instructions[i].rd]=Register[instructions[i].rs]-Register[instructions[i].rt];
                         output<<" Branch=0 MemRead=0 MemWrite=0 RegWrite=1 MemtoReg=0";
                     }
                     else if(instructions[i].instruction=="lw")
@@ -274,8 +279,6 @@ int main(){
                     }
                     else if(instructions[i].instruction=="sw")
                     {
-                        int offset=instructions[i].constant/4+instructions[i].rs;
-                        Memory[offset]=Register[instructions[i].rt];
                         output<<" Branch=0 MemRead=0 MemWrite=1 RegWrite=0 MemtoReg=X";
                     }
                     else if(instructions[i].instruction=="beq")
@@ -301,6 +304,8 @@ int main(){
                     }
                     else if(instructions[i].instruction=="sw")
                     {
+                        int offset=instructions[i].constant/4+instructions[i].rs;
+                        Memory[offset]=Register[instructions[i].rt];
                         output<<" RegWrite=0 MemtoReg=X";
                     }
                     else if(instructions[i].instruction=="beq")
