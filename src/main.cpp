@@ -9,6 +9,7 @@
 using namespace std;
 
 int cycle = 0;
+int PC=0;//word address
 const string folder_path = "../inputs\\*";
 const int Register_num = 32;
 const int Memory_size = 32;
@@ -29,6 +30,7 @@ void init()
         Memory[i] = 1;
     }
     cycle = 0;
+    PC = 0;
 }
 
 void ReadFile(const string &folder_path)
@@ -63,7 +65,7 @@ void ReadFile(const string &folder_path)
     FindClose(hFind);
 }
 
-enum stage{IF,ID,EX,MEM,WB};
+enum stage{IF,ID,EX,MEM,WB,Done};
 
 string EnumtoString(enum stage s)
 {
@@ -87,8 +89,9 @@ struct Instruction
 {
     string instruction;
     int rd;
-    int rs; //lw,sw用來存位移
-    int rt; //lw,sw用來存()裡的暫存器、beq用來存位移
+    int rs; 
+    int rt; 
+    int constant;//也存beq的offset
     stage current_stage;
 };
 
@@ -109,7 +112,7 @@ Instruction process_instruction(string input)
         for(int i=0;i<input.length();i++){
             if(input[i]=='$')
             {
-                inst.rd = input[i+1] - '0';
+                inst.rt = input[i+1] - '0';
                 input = input.substr(i+3);
                 break;
             }
@@ -117,11 +120,11 @@ Instruction process_instruction(string input)
         for(int i = 0,j = 0;i<input.length();i++){
             if(input[i] == '(')
             {
-                inst.rs = stoi(input.substr(j,i-j));
+                inst.constant = stoi(input.substr(j,i-j));
             }
             if(input[i] == '$')
             {
-                inst.rt = input[i+1] - '0';
+                inst.rs = input[i+1] - '0';
                 break;
             }
         }
@@ -158,7 +161,7 @@ Instruction process_instruction(string input)
         for(int i=0;i<input.length();i++){
             if(input[i]=='$')
             {
-                inst.rd = input[i+1] - '0';
+                inst.rs = input[i+1] - '0';
                 input = input.substr(i+3);
                 break;
             }
@@ -166,12 +169,12 @@ Instruction process_instruction(string input)
         for(int i=0;i<input.length();i++){
             if(input[i]=='$')
             {
-                inst.rs = input[i+1] - '0';
+                inst.rt = input[i+1] - '0';
                 input = input.substr(i+3);
                 break;
             }
         }
-        inst.rt = stoi(input);
+        inst.constant = stoi(input);
     }
     inst.current_stage = IF;
 
@@ -193,45 +196,137 @@ int main(){
 
         Inputs.pop();
 
-        instructions.push_back(process_instruction(input.front()));
-        input.pop_front();
+        instructions.push_back(process_instruction(input[PC]));
 
         while(!instructions.empty()){
             //cout<<"Cycle "<<(++cycle)<<endl;
             output<<"Cycle "<<++cycle<<endl;
+            PC++;
             for(int i=0;i<instructions.size();i++){
                 string instruction = instructions[i].instruction;
                 stage current_stage = instructions[i].current_stage;
 
                 //cout<<instructions[i].instruction<<":"<<EnumtoString(current_stage)<<endl;
-                output<<instructions[i].instruction<<":"<<EnumtoString(current_stage)<<endl;
+                output<<instructions[i].instruction<<":"<<EnumtoString(current_stage);
 
                 if(current_stage==IF)
                 {
+                    output<<endl;
                     instructions[i].current_stage = ID;
                 }
                 else if(current_stage==ID)
                 {
+                    if(instruction == "beq"){
+                        taken = false;
+                        if(Register[instructions[i].rs] == Register[instructions[i].rt]){
+                            taken = true;
+                        }
+                        if(taken){
+                            if(PC != instructions.size() - 1){
+                                instrucions.pop_back();
+                            }
+                            PC = PC + instructions[i].constant - 1;
+                        }
+                    }
+                    output<<endl;
                     instructions[i].current_stage = EX;
                 }
                 else if(current_stage==EX)
                 {
+                    if(instructions[i].instruction=="add")
+                    {
+                        output<<" RegDst=1 ALUSrc=0 Branch=0 MemRead=0 MemWrite=0 RegWrite=1 MemtoReg=0";
+                    }
+                    else if(instructions[i].instruction=="sub")
+                    {
+                        output<<" RegDst=1 ALUSrc=0 Branch=0 MemRead=0 MemWrite=0 RegWrite=1 MemtoReg=0";
+                    }
+                    else if(instructions[i].instruction=="lw")
+                    {
+                        output<<" RegDst=0 ALUSrc=1 Branch=0 MemRead=1 MemWrite=0 RegWrite=1 MemtoReg=1";
+                    }
+                    else if(instructions[i].instruction=="sw")
+                    {
+                        output<<" RegDst=X ALUSrc=1 Branch=0 MemRead=0 MemWrite=1 RegWrite=0 MemtoReg=X";
+                    }
+                    else if(instructions[i].instruction=="beq")
+                    {
+                        output<<" RegDst=X ALUSrc=0 Branch=1 MemRead=0 MemWrite=0 RegWrite=0 MemtoReg=X";
+                    }
+                    output<<endl;
                     instructions[i].current_stage = MEM;
                 }
                 else if(current_stage==MEM)
                 {
+                    if(instructions[i].instruction=="add")
+                    {
+                        output<<" Branch=0 MemRead=0 MemWrite=0 RegWrite=1 MemtoReg=0";
+                    }
+                    else if(instructions[i].instruction=="sub")
+                    {
+                        output<<" Branch=0 MemRead=0 MemWrite=0 RegWrite=1 MemtoReg=0";
+                    }
+                    else if(instructions[i].instruction=="lw")
+                    {
+                        output<<" Branch=0 MemRead=1 MemWrite=0 RegWrite=1 MemtoReg=1";
+                    }
+                    else if(instructions[i].instruction=="sw")
+                    {
+                        output<<" Branch=0 MemRead=0 MemWrite=1 RegWrite=0 MemtoReg=X";
+                    }
+                    else if(instructions[i].instruction=="beq")
+                    {
+                        output<<" Branch=1 MemRead=0 MemWrite=0 RegWrite=0 MemtoReg=X";
+                    }
+                    output<<endl;
                     instructions[i].current_stage = WB;
                 }
                 else if(current_stage==WB)
                 {
-                    instructions.pop_front();
+                    if(instructions[i].instruction=="add")
+                    {
+                        output<<" RegWrite=1 MemtoReg=0";
+                    }
+                    else if(instructions[i].instruction=="sub")
+                    {
+                        output<<" RegWrite=1 MemtoReg=0";
+                    }
+                    else if(instructions[i].instruction=="lw")
+                    {
+                        output<<" RegWrite=1 MemtoReg=1";
+                    }
+                    else if(instructions[i].instruction=="sw")
+                    {
+                        output<<" RegWrite=0 MemtoReg=X";
+                    }
+                    else if(instructions[i].instruction=="beq")
+                    {
+                        output<<" RegWrite=0 MemtoReg=X";
+                    }
+                    output<<endl;
+                    instructions[i].current_stage = Done;
                 }
             }
-            if(!input.empty())
+            if(instructions[0].current_stage==Done)
             {
-                instructions.push_back(process_instruction(input.front()));
-                input.pop_front();
+                instructions.pop_front();
             }
+            if(PC<input.size())
+            {
+                instructions.push_back(process_instruction(input[PC]));
+            }
+        }
+        output<<endl<<"## Final Result:"<<endl;
+        output<<"Total Cycles: "<<cycle<<endl<<endl;
+        output<<"Final Register Values:"<<endl;
+        for(int i=0;i<Register_num;i++)
+        {
+            output<<Register[i]<<" ";
+        }
+        output<<endl<<"Final Memory Values:"<<endl;
+        for(int i=0;i<Memory_size;i++)
+        {
+            output<<Memory[i]<<" ";
         }
         output.close();
     }
