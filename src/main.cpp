@@ -185,10 +185,10 @@ int main(){
 
     init();
     ReadFile(folder_path);
-    int ca=0;
+    //int ca=0; //debug
     while(!Inputs.empty()){
 
-        cout<<"Case"<<(++ca)<<endl;
+        //cout<<"Case"<<(++ca)<<endl; //debug
 
         ofstream output("../outputs/"+filenames.front());
         filenames.pop();
@@ -272,7 +272,7 @@ int main(){
                     if ((instructions[i].instruction=="sub" || instructions[i].instruction=="add") && i+1 < instructions.size()){
                         if(instructions[i+1].instruction == "beq" && ((instructions[i].rd == instructions[i + 1].rs )|| (instructions[i].rd == instructions[i + 1].rt))){
                             stall = 1;
-                            cout<<"Hello world"<<endl;
+                            //cout<<"Hello world"<<endl; //debug
                         }
                     }
                     
