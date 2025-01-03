@@ -234,11 +234,13 @@ int main(){
                 else if(current_stage==EX)
                 {
                     if(instructions[i].instruction=="add")
-                    {
+                    {   
+                        Register[instructions[i].rd]=Register[instructions[i].rs]+Register[instructions[i].rt];
                         output<<" RegDst=1 ALUSrc=0 Branch=0 MemRead=0 MemWrite=0 RegWrite=1 MemtoReg=0";
                     }
                     else if(instructions[i].instruction=="sub")
-                    {
+                    {   
+                        Register[instructions[i].rd]=Register[instructions[i].rs]-Register[instructions[i].rt];
                         output<<" RegDst=1 ALUSrc=0 Branch=0 MemRead=0 MemWrite=0 RegWrite=1 MemtoReg=0";
                     }
                     else if(instructions[i].instruction=="lw")
@@ -259,11 +261,11 @@ int main(){
                 else if(current_stage==MEM)
                 {
                     if(instructions[i].instruction=="add")
-                    {
+                    {   
                         output<<" Branch=0 MemRead=0 MemWrite=0 RegWrite=1 MemtoReg=0";
                     }
                     else if(instructions[i].instruction=="sub")
-                    {
+                    {   
                         output<<" Branch=0 MemRead=0 MemWrite=0 RegWrite=1 MemtoReg=0";
                     }
                     else if(instructions[i].instruction=="lw")
@@ -272,6 +274,8 @@ int main(){
                     }
                     else if(instructions[i].instruction=="sw")
                     {
+                        int offset=instructions[i].constant/4+instructions[i].rs;
+                        Memory[offset]=Register[instructions[i].rt];
                         output<<" Branch=0 MemRead=0 MemWrite=1 RegWrite=0 MemtoReg=X";
                     }
                     else if(instructions[i].instruction=="beq")
